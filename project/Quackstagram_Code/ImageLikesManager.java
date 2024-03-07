@@ -1,20 +1,18 @@
 import java.io.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class ImageLikesManager {
 
     private final String likesFilePath = "data/likes.txt";
 
     // Method to like an image
-    public void likeImage(String username, String imageID) throws IOException {
-        Map<String, Set<String>> likesMap = readLikes();
-        if (!likesMap.containsKey(imageID)) {
-            likesMap.put(imageID, new HashSet<>());
-        }
-        Set<String> users = likesMap.get(imageID);
-        if (users.add(username)) { // Only add and save if the user hasn't already liked the image
+    public void likeImage(String username, String imageID) {
+        try {
+            Map<String, Set<String>> likesMap = readLikes();
+            likesMap.computeIfAbsent(imageID, k -> new HashSet<>()).add(username);
             saveLikes(likesMap);
+        } catch (IOException e) {
+            System.err.println("Error while liking image: " + e.getMessage());
         }
     }
 
@@ -26,7 +24,7 @@ public class ImageLikesManager {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":");
                 String imageID = parts[0];
-                Set<String> users = Arrays.stream(parts[1].split(",")).collect(Collectors.toSet());
+                Set<String> users = new HashSet<>(Arrays.asList(parts[1].split(",")));
                 likesMap.put(imageID, users);
             }
         }
